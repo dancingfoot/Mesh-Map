@@ -1,5 +1,5 @@
 import React from 'react';
-import { ConnectionStatus, SerialSettings } from '../types';
+import { ConnectionStatus, SerialSettings, AvailablePort } from '../types';
 import {
   Radio,
   Sliders,
@@ -19,6 +19,8 @@ interface SidebarProps {
   onUpdateSettings: (newSettings: Partial<SerialSettings>) => void;
   status: ConnectionStatus;
   statusMessage: string;
+  availablePorts?: AvailablePort[];
+  onScanNewPort?: () => void;
   onConnectSerial: () => void;
   onDisconnect: () => void;
   onStartSimulation: () => void;
@@ -35,6 +37,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onUpdateSettings,
   status,
   statusMessage,
+  availablePorts = [],
+  onScanNewPort,
   onConnectSerial,
   onDisconnect,
   onStartSimulation,
@@ -107,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </label>
               <button
                 type="button"
-                onClick={onConnectSerial}
+                onClick={onScanNewPort || onConnectSerial}
                 disabled={isBusy}
                 className="text-[10px] text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1 transition-colors"
                 title="Authorize and detect new USB serial hardware"
@@ -123,6 +127,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onChange={(e) => onUpdateSettings({ port: e.target.value })}
               className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 disabled:opacity-60 font-mono"
             >
+              {availablePorts.length > 0 && (
+                <optgroup label="Available System Ports">
+                  {availablePorts.map((port) => (
+                    <option key={port.id} value={port.id}>
+                      {port.label}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
               <optgroup label="Linux & Raspberry Pi">
                 <option value="/dev/ttyUSB0">/dev/ttyUSB0 — Primary USB-UART (CH340/CP2102)</option>
                 <option value="/dev/ttyACM0">/dev/ttyACM0 — Meshtastic ESP32-S3 / RP2040 CDC</option>

@@ -106,20 +106,24 @@ export const PythonCodeModal: React.FC<PythonCodeModalProps> = ({
             </pre>
           ) : (
             <div className="font-sans space-y-6 text-slate-300">
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-                <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-2">
-                  <Terminal className="w-4 h-4 text-emerald-400" />
-                  1. Quick Install Dependencies
-                </h3>
-                <p className="text-xs text-slate-400 mb-3">
-                  Install the four core Python packages required for the GIS tracking dashboard:
+              {/* Quick Launcher Script */}
+              <div className="p-4 rounded-xl bg-gradient-to-r from-blue-950/60 to-indigo-950/60 border border-blue-800/80">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                    <Terminal className="w-4 h-4 text-emerald-400" />
+                    Option A: 1-Click Automated Launcher (Recommended)
+                  </h3>
+                  <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded-full font-medium">
+                    Auto-handles venv &amp; PEP 668
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 mb-3">
+                  A pre-configured launcher script is included that automatically creates a virtual environment, installs dependencies, and starts Streamlit:
                 </p>
                 <div className="p-3 bg-black rounded-lg font-mono text-xs text-emerald-400 border border-slate-800 flex items-center justify-between">
-                  <span>pip install streamlit folium streamlit-folium pyserial</span>
+                  <span>./run.sh</span>
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText('pip install streamlit folium streamlit-folium pyserial');
-                    }}
+                    onClick={() => navigator.clipboard.writeText('./run.sh')}
                     className="text-slate-400 hover:text-white text-xs underline font-sans ml-4"
                   >
                     Copy
@@ -127,28 +131,54 @@ export const PythonCodeModal: React.FC<PythonCodeModalProps> = ({
                 </div>
               </div>
 
+              {/* Standard VENV Setup */}
               <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
                 <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-2">
                   <BookOpen className="w-4 h-4 text-blue-400" />
-                  2. Launching the Application
+                  Option B: Standard Virtual Environment (Fix for "externally-managed-environment")
                 </h3>
                 <p className="text-xs text-slate-400 mb-3">
-                  Run the standalone Python script using the Streamlit CLI:
+                  Modern Linux (Debian 12+, Ubuntu 23+, Raspberry Pi OS) requires installing packages into a virtual environment per PEP 668:
                 </p>
-                <div className="p-3 bg-black rounded-lg font-mono text-xs text-blue-400 border border-slate-800 flex items-center justify-between">
-                  <span>streamlit run mesh_map.py</span>
+                <div className="p-3 bg-black rounded-lg font-mono text-xs text-blue-300 border border-slate-800 space-y-1">
+                  <div><span className="text-slate-500"># 1. Create and activate virtual environment</span></div>
+                  <div className="text-emerald-400">python3 -m venv .venv && source .venv/bin/activate</div>
+                  <div className="pt-2"><span className="text-slate-500"># 2. Install dependencies &amp; run</span></div>
+                  <div className="text-emerald-400">pip install -r requirements.txt</div>
+                  <div className="text-emerald-400">streamlit run mesh_map.py</div>
+                </div>
+                <div className="mt-2 text-right">
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText('streamlit run mesh_map.py');
+                      navigator.clipboard.writeText('python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && streamlit run mesh_map.py');
+                    }}
+                    className="text-blue-400 hover:text-blue-300 text-xs underline font-medium"
+                  >
+                    Copy All-in-One Command
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick override alternative */}
+              <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+                <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-2">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  Option C: Single-command Override (--break-system-packages)
+                </h3>
+                <p className="text-xs text-slate-400 mb-2">
+                  If you prefer installing globally without creating a virtual environment:
+                </p>
+                <div className="p-3 bg-black rounded-lg font-mono text-xs text-amber-300 border border-slate-800 flex items-center justify-between">
+                  <span>pip install --break-system-packages -r requirements.txt && python3 -m streamlit run mesh_map.py</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText('pip install --break-system-packages -r requirements.txt && python3 -m streamlit run mesh_map.py');
                     }}
                     className="text-slate-400 hover:text-white text-xs underline font-sans ml-4"
                   >
                     Copy
                   </button>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">
-                  Streamlit will start a local server at <code className="text-slate-300">http://localhost:8501</code> and automatically open your default browser.
-                </p>
               </div>
 
               <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
