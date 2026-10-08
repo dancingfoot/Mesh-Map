@@ -9,6 +9,11 @@ export interface GpsPoint {
   source: string;
   timestamp: string;
   raw: string;
+  /**
+   * True when this fix came from the device's node database rather than a live
+   * packet — it is that node's LAST KNOWN position and may be hours old.
+   */
+  isStale?: boolean;
 }
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'simulated' | 'error';

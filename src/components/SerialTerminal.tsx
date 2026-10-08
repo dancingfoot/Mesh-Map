@@ -1,19 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { usePanelView } from './Panel';
 import { Terminal, Send, Trash2, Copy, Check, ArrowDownCircle } from 'lucide-react';
 
 interface SerialTerminalProps {
   logs: string[];
   onClearLogs: () => void;
   onInjectLine: (line: string) => void;
-  connectionStatus: string;
 }
 
 export const SerialTerminal: React.FC<SerialTerminalProps> = ({
   logs,
   onClearLogs,
   onInjectLine,
-  connectionStatus,
 }) => {
+  // Fills the resizable body when its Panel is floating; fixed height when docked.
+  const { floating } = usePanelView();
   const [inputVal, setInputVal] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -58,7 +59,11 @@ export const SerialTerminal: React.FC<SerialTerminalProps> = ({
   ];
 
   return (
-    <div className="bg-slate-950 text-slate-200 rounded-xl border border-slate-800 shadow-sm flex flex-col h-[380px] overflow-hidden">
+    <div
+      className={`bg-slate-950 text-slate-200 flex flex-col overflow-hidden ${
+        floating ? 'h-full min-h-[240px]' : 'h-[380px]'
+      }`}
+    >
       {/* Terminal Header */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-slate-800 text-xs">
         <div className="flex items-center gap-2">

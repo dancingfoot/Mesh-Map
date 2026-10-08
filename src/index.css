@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/*
+ * The app shell is dark by design (rail, terminal, node list and the root all
+ * use slate-900/950). Tailwind v4 defaults `dark:` to the OS preference, which
+ * meant MetricsBar/PointsTable flipped to dark on a dark-preferring desktop
+ * while every other component stayed light. Switching the variant to a class
+ * and putting `dark` on the root makes the whole UI render one theme.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @keyframes ping {
   75%, 100% {
     transform: scale(2);
@@ -8,7 +17,9 @@
 }
 
 .custom-start-marker,
-.custom-current-marker {
+.custom-current-marker,
+.custom-node-start-marker,
+.custom-node-current-marker {
   background: transparent !important;
   border: none !important;
 }
@@ -20,5 +31,23 @@
 .leaflet-popup-content-wrapper {
   border-radius: 0.75rem;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/*
+ * Leaflet's controls (zoom, scale, attribution) and the app's own map overlays
+ * are left LIGHT and translucent on purpose: they float on the light map tiles,
+ * so dark chrome there read as a theme clash. Only the surrounding app shell is
+ * dark. Popups keep their own light styling for the same reason (their text
+ * colours are fixed in utils/mapLayers.ts).
+ */
+.leaflet-control-attribution,
+.leaflet-control-scale-line {
+  background: rgba(255, 255, 255, 0.75);
+  color: #475569;
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+.leaflet-control-attribution a {
+  color: #1d4ed8;
 }
 

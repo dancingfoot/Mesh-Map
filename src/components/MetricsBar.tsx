@@ -1,14 +1,19 @@
 import React from 'react';
 import { GpsPoint } from '../types';
 import { calculateTotalDistanceKm } from '../utils/haversine';
-import { Navigation, MapPin, Gauge, Mountain, Radio, Compass } from 'lucide-react';
+import { Navigation, MapPin, Mountain, Radio, Compass } from 'lucide-react';
 
 interface MetricsBarProps {
+  /** Packets currently displayed (after the time-window / node filters). */
   points: GpsPoint[];
+  /** Total logged packets, so the filtered subset stays discoverable. */
+  totalCount?: number;
 }
 
-export const MetricsBar: React.FC<MetricsBarProps> = ({ points }) => {
+export const MetricsBar: React.FC<MetricsBarProps> = ({ points, totalCount }) => {
   const totalPoints = points.length;
+  const unfilteredCount = totalCount ?? totalPoints;
+  const isFiltered = unfilteredCount !== totalPoints;
   const totalDistanceKm = calculateTotalDistanceKm(points);
   const latestPoint = points.length > 0 ? points[points.length - 1] : null;
 
@@ -24,7 +29,9 @@ export const MetricsBar: React.FC<MetricsBarProps> = ({ points }) => {
           <span className="text-xl font-bold font-mono tabular-nums text-slate-900 dark:text-white">
             {totalPoints.toLocaleString()}
           </span>
-          <span className="text-xs font-mono text-slate-400">pts</span>
+          <span className="text-xs font-mono text-slate-400">
+            {isFiltered ? `of ${unfilteredCount.toLocaleString()}` : 'pts'}
+          </span>
         </div>
       </div>
 
@@ -78,9 +85,9 @@ export const MetricsBar: React.FC<MetricsBarProps> = ({ points }) => {
         </div>
         <div className="mt-1 flex items-baseline gap-1">
           <span className="text-xl font-bold font-mono tabular-nums text-slate-900 dark:text-white">
-            {latestPoint && latestPoint.altitude !== null ? latestPoint.altitude : '—'}
+            {latestPoint && latestPoint.altitude != null ? latestPoint.altitude : '—'}
           </span>
-          {latestPoint && latestPoint.altitude !== null && (
+          {latestPoint && latestPoint.altitude != null && (
             <span className="text-xs font-mono text-slate-400">m</span>
           )}
         </div>

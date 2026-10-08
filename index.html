@@ -3,13 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mesh Map - Meshtastic Real-Time GPS Tracking & Folium Dashboard</title>
-    <meta name="description" content="Real-time Meshtastic node movement and GIS path tracking over serial connection using Python, Streamlit, and Folium." />
-    <meta property="og:title" content="Mesh Map - Meshtastic Real-Time GPS Tracking & Folium Dashboard" />
-    <meta property="og:description" content="Real-time Meshtastic node movement and GIS path tracking over serial connection using Python, Streamlit, and Folium." />
+    <title>Mesh Map - Meshtastic Real-Time GPS Tracking Dashboard</title>
+    <meta name="description" content="Real-time Meshtastic node movement and GIS path tracking over Web Serial, with per-node traces, a node list and time-window filtering." />
+    <meta property="og:title" content="Mesh Map - Meshtastic Real-Time GPS Tracking Dashboard" />
+    <meta property="og:description" content="Real-time Meshtastic node movement and GIS path tracking over Web Serial, with per-node traces, a node list and time-window filtering." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Inline SVG favicon: stops browsers from requesting /favicon.ico (404). -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%A1%3C/text%3E%3C/svg%3E" />
   </head>
   <body>
     <div id="root"></div>

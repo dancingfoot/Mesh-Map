@@ -4,11 +4,15 @@ import { exportToGeoJson, exportToGpx, exportToCsv } from '../utils/haversine';
 import { Download, FileJson, FileSpreadsheet, Search } from 'lucide-react';
 
 interface PointsTableProps {
+  /** Packets currently displayed (after the time-window / node filters). */
   points: GpsPoint[];
+  /** Total logged packets, so the filtered subset stays discoverable. */
+  totalCount?: number;
 }
 
-export const PointsTable: React.FC<PointsTableProps> = ({ points }) => {
+export const PointsTable: React.FC<PointsTableProps> = ({ points, totalCount }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const unfilteredCount = totalCount ?? points.length;
 
   const filteredPoints = points.filter(
     (p) =>
@@ -49,7 +53,9 @@ export const PointsTable: React.FC<PointsTableProps> = ({ points }) => {
         <div>
           <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Logged Coordinate Points</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {points.length} coordinates recorded in current session trace
+            {points.length === unfilteredCount
+              ? `${points.length} coordinates recorded in current session trace`
+              : `${points.length} of ${unfilteredCount} coordinates shown (time window / node filter)`}
           </p>
         </div>
 
@@ -151,10 +157,10 @@ export const PointsTable: React.FC<PointsTableProps> = ({ points }) => {
                     <td className="py-2 px-3 tabular-nums font-semibold">{pt.latitude.toFixed(6)}°</td>
                     <td className="py-2 px-3 tabular-nums font-semibold">{pt.longitude.toFixed(6)}°</td>
                     <td className="py-2 px-3 tabular-nums">
-                      {pt.altitude !== null ? `${pt.altitude} m` : '—'}
+                      {pt.altitude != null ? `${pt.altitude} m` : '—'}
                     </td>
                     <td className="py-2 px-3 tabular-nums">
-                      {pt.speed_kmh !== null ? `${pt.speed_kmh} km/h` : '—'}
+                      {pt.speed_kmh != null ? `${pt.speed_kmh} km/h` : '—'}
                     </td>
                     <td className="py-2 px-3 font-sans text-slate-600 dark:text-slate-400 whitespace-nowrap">
                       {pt.source}

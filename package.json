@@ -1,38 +1,87 @@
 {
-  "name": "react-example",
+  "name": "mesh-map",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Meshtastic real-time GPS tracking dashboard: per-node traces and telemetry, OSC and MIDI output",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "clean": "rm -rf dist",
+    "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "bridge": "node bridge/osc-bridge.mjs",
+    "test:bridge": "node bridge/test-osc-bridge.mjs",
+    "test:ports": "node bridge/test-serial-ports.mjs",
+    "list:ports": "node bridge/list-ports.mjs",
+    "desktop": "npm run build && electron .",
+    "desktop:smoke": "npm run build && electron . --smoke-test --no-sandbox",
+    "desktop:build": "npm run build && electron-builder --linux AppImage"
   },
   "dependencies": {
-    "@google/genai": "^2.4.0",
-    "@tailwindcss/vite": "^4.3.3",
-    "@types/leaflet": "^1.9.22",
-    "@vitejs/plugin-react": "^6.1.1",
-    "dotenv": "^17.2.3",
-    "express": "^4.21.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.546.0",
-    "motion": "^12.23.24",
     "react": "^19.0.1",
-    "react-dom": "^19.0.1",
-    "vite": "^8.3.0"
+    "react-dom": "^19.0.1"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/leaflet": "^1.9.22",
     "@types/node": "^22.14.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "autoprefixer": "^10.4.21",
-    "esbuild": "^0.25.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.0",
     "tailwindcss": "^4.3.3",
-    "tsx": "^4.21.0",
     "typescript": "^7.0.2",
-    "@types/express": "^4.17.21"
-  }
+    "vite": "^8.3.0",
+    "vitest": "^5.0.2"
+  },
+  "main": "desktop/main.mjs",
+  "author": "Mesh Map",
+  "build": {
+    "appId": "org.meshmap.desktop",
+    "productName": "Mesh Map",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "desktop/**/*",
+      "package.json",
+      "!**/node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "bridge",
+        "to": "bridge",
+        "filter": [
+          "osc-bridge.mjs",
+          "serial-ports.mjs",
+          "list-ports.mjs",
+          "README.md"
+        ]
+      }
+    ],
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Utility",
+      "icon": "build/icon.png",
+      "executableName": "mesh-map",
+      "synopsis": "Meshtastic real-time GPS tracking",
+      "description": "Real-time Meshtastic node tracking over Web Serial: per-node traces, telemetry, and OSC/MIDI output.",
+      "syncDesktopName": true
+    },
+    "appImage": {
+      "artifactName": "Mesh-Map-${version}-${arch}.AppImage"
+    }
+  },
+  "desktopName": "mesh-map.desktop"
 }

@@ -1,6 +1,0 @@
-{
-  "name": "Mesh Map",
-  "description": "Real-time Meshtastic node movement and GIS path tracking over serial connection using Python, Streamlit, and Folium.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

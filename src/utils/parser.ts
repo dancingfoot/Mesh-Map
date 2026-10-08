@@ -69,7 +69,9 @@ export function parseNmeaSentence(line: string): GpsPoint | null {
       const lon = parseNmeaCoordinate(parts[5], parts[6]);
       if (lat !== null && lon !== null) {
         const speedKnots = parts[7] ? parseFloat(parts[7]) : null;
-        const speedKmh = speedKnots && !isNaN(speedKnots) ? Number((speedKnots * 1.852).toFixed(1)) : null;
+        // `speedKnots !== null` (not truthiness) so a genuine 0 kt -> 0.0 km/h.
+        const speedKmh =
+          speedKnots !== null && !isNaN(speedKnots) ? Number((speedKnots * 1.852).toFixed(1)) : null;
         return {
           id: `nmea-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
           latitude: lat,
@@ -116,6 +118,9 @@ export function parseMeshtasticJson(line: string): GpsPoint | null {
     } else if (typeof data.latitude_i === 'number' && typeof data.longitude_i === 'number') {
       lat = data.latitude_i / 1e7;
       lon = data.longitude_i / 1e7;
+    } else if (typeof data.latitudeI === 'number' && typeof data.longitudeI === 'number') {
+      lat = data.latitudeI / 1e7;
+      lon = data.longitudeI / 1e7;
     }
 
     // Check payload object
@@ -180,6 +185,60 @@ export function parseMeshtasticJson(line: string): GpsPoint | null {
 }
 
 /**
+ * Strips ANSI/VT100 colour escapes from a serial line.
+ *
+ * Meshtastic firmware colourises its console log even over USB serial, so raw
+ * lines look like "\u001b[34mDEBUG \u001b[0m| ... [GPS] ...".
+ */
+export function stripAnsi(text: string): string {
+  // eslint-disable-next-line no-control-regex
+  return text.replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, '');
+}
+
+/**
+ * Meshtastic firmware console position lines, e.g.
+ *   DEBUG | 11:36:30 67 [Router] POSITION node=a1d7631c l=33 lat=386993383 lon=-92322000 msl=105 hae=0 ...
+ *   INFO  | 11:36:30 67 [Router] updatePosition REMOTE node=0xa1d7631c time=1790681791 lat=386993383 lon=-92322000
+ *
+ * Latitude/longitude are 1e7-scaled integers; a value containing a decimal
+ * point is already in degrees.
+ */
+export function parseMeshtasticLogLine(line: string): GpsPoint | null {
+  const text = stripAnsi(line);
+
+  const fix = text.match(/\blat=(-?\d+(?:\.\d+)?)[\s,;]+lon=(-?\d+(?:\.\d+)?)/);
+  if (!fix) return null;
+
+  const toDegrees = (raw: string): number => {
+    const value = Number(raw);
+    if (raw.includes('.') || /e/i.test(raw)) return value;
+    return Math.abs(value) > 180 ? value / 1e7 : value;
+  };
+
+  const lat = toDegrees(fix[1]);
+  const lon = toDegrees(fix[2]);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
+  // Discard the (0, 0) placeholder a node reports before it has a fix.
+  if (Math.abs(lat) <= 0.0001 && Math.abs(lon) <= 0.0001) return null;
+
+  // `msl` (mean sea level) is the altitude Meshtastic logs; `hae` is ellipsoid.
+  const altMatch = text.match(/\b(?:msl|alt|altitude)=(-?\d+(?:\.\d+)?)/);
+  const nodeMatch = text.match(/\bnode=(0x[0-9a-fA-F]+|[0-9a-fA-F]{4,})/);
+
+  return {
+    id: `meshlog-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    latitude: Number(lat.toFixed(6)),
+    longitude: Number(lon.toFixed(6)),
+    altitude: altMatch ? Number(Number(altMatch[1]).toFixed(1)) : null,
+    node_id: nodeMatch ? `!${nodeMatch[1].toLowerCase().replace(/^0x/, '')}` : null,
+    source: 'Meshtastic Log',
+    timestamp: new Date().toISOString(),
+    raw: text.trim(),
+  };
+}
+
+/**
  * Unified stream line parser.
  */
 export function parseSerialStreamLine(line: string): GpsPoint | null {
@@ -195,6 +254,10 @@ export function parseSerialStreamLine(line: string): GpsPoint | null {
     const nmeaParsed = parseNmeaSentence(trimmed);
     if (nmeaParsed) return nmeaParsed;
   }
+
+  // Firmware console log lines carry `lat=`/`lon=` key/value pairs.
+  const logParsed = parseMeshtasticLogLine(trimmed);
+  if (logParsed) return logParsed;
 
   return null;
 }

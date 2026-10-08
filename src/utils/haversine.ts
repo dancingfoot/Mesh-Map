@@ -69,14 +69,34 @@ export function exportToGeoJson(points: GpsPoint[]): string {
   return JSON.stringify(featureCollection, null, 2);
 }
 
+/**
+ * Escapes text for XML content/attributes (GPX).
+ *
+ * Sources and node ids are interpolated into the track points, and a stray `&`
+ * or `<` would make the exported file unparseable by QGIS/Garmin/etc.
+ */
+function escapeXml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+/** Wraps a CSV field in quotes, doubling any embedded quote (RFC 4180). */
+function csvField(value: unknown): string {
+  return `"${String(value ?? '').replace(/"/g, '""')}"`;
+}
+
 export function exportToGpx(points: GpsPoint[]): string {
   const trkpts = points
     .map(
       (p) =>
         `      <trkpt lat="${p.latitude.toFixed(6)}" lon="${p.longitude.toFixed(6)}">
         <ele>${p.altitude ?? 0}</ele>
-        <time>${p.timestamp}</time>
-        <desc>${p.source}${p.node_id ? ` - Node: ${p.node_id}` : ''}</desc>
+        <time>${escapeXml(p.timestamp)}</time>
+        <desc>${escapeXml(p.source)}${p.node_id ? ` - Node: ${escapeXml(p.node_id)}` : ''}</desc>
       </trkpt>`
     )
     .join('\n');
@@ -100,13 +120,13 @@ export function exportToCsv(points: GpsPoint[]): string {
   const headers = ['Index', 'Timestamp', 'Latitude', 'Longitude', 'Altitude_m', 'Source', 'Node_ID', 'Raw'];
   const rows = points.map((p, i) => [
     i + 1,
-    `"${p.timestamp}"`,
+    csvField(p.timestamp),
     p.latitude,
     p.longitude,
     p.altitude ?? '',
-    `"${p.source}"`,
-    `"${p.node_id ?? ''}"`,
-    `"${p.raw.replace(/"/g, '""')}"`,
+    csvField(p.source),
+    csvField(p.node_id ?? ''),
+    csvField(p.raw),
   ]);
   return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
 }

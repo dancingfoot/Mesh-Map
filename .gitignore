@@ -1,8 +1,12 @@
 node_modules/
-build/
 dist/
+release/
 coverage/
 .DS_Store
 *.log
 .env*
 !.env.example
+
+# Chromium singleton files, written when a headless browser uses this directory
+# as its profile (e.g. automated UI checks).
+Singleton*
