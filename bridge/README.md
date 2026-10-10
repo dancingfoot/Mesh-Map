@@ -1,4 +1,10 @@
-# OSC Bridge
+# Mesh Map bridges
+
+Two small local Node bridges for the Mesh-Map dashboard: an **OSC bridge** (below)
+and an **MQTT ingest bridge** ([further down](#mqtt-ingest-bridge)). Both exist because
+a browser cannot open raw TCP or UDP sockets itself.
+
+## OSC Bridge
 
 A tiny, **zero-dependency** OSC 1.0 bridge for the Mesh-Map dashboard.
 
@@ -212,3 +218,106 @@ OSC transport, no message queuing/retry (UDP is fire-and-forget), no auth/TLS, a
 no `--osc-port 0` discovery. There is no browser-side client here — the dashboard
 component lives under `src/`. The WebSocket server implements only what the
 contract above needs.
+
+---
+
+# MQTT ingest bridge
+
+`bridge/mqtt-bridge.mjs` subscribes to an MQTT broker and relays every message to the
+dashboard over **Server-Sent Events**. It exists for the same reason as the OSC bridge:
+a browser cannot open a raw TCP connection to a broker's port 1883/8883. Credentials
+live in the bridge (never in the page), the subscription runs whether or not the tab is
+open, and the relay is a plain HTTP `GET /stream`.
+
+It speaks **MQTT 3.1.1** itself, so it needs no `mqtt` package and the AppImage ships no
+`node_modules`. Unknown topics are still forwarded — the dashboard classifies each
+message by topic into a **BirdNET-Pi**, **Meshtastic** or **weather-station** feed.
+
+## Run it
+
+```sh
+npm run bridge:mqtt                       # HTTP + SSE on 127.0.0.1:9300
+node bridge/mqtt-bridge.mjs --help
+```
+
+| Flag | Meaning | Default |
+| --- | --- | --- |
+| `--listen <port>` | HTTP/SSE port for the dashboard | `9300` |
+| `--bind <host>` | bind address | `127.0.0.1` |
+| `--config <path>` | JSON file the broker config is read from and persisted to | `bridge/mqtt-config.json` |
+| `--launch-mosquitto` | also spawn a local `mosquitto -c bridge/mosquitto.example.conf` if installed | off |
+
+Start the **first** instance with `--launch-mosquitto` to get a local broker with no
+system setup; otherwise point it at any broker you already run.
+
+## Broker
+
+Any MQTT 3.1.1 broker works; **Mosquitto** is the usual choice.
+
+```sh
+sudo apt install mosquitto            # Debian/Ubuntu
+mosquitto -c bridge/mosquitto.example.conf
+```
+
+`bridge/mosquitto.example.conf` listens on `1883` (MQTT) and `9001` (WebSockets),
+allows anonymous clients, and enables persistence — intended for a trusted LAN, so add
+a password file and TLS before exposing it. For a broker **without** Mosquitto, use the
+bundled real-broker fixture:
+
+```sh
+npm run broker:test                   # aedes on an ephemeral port, publishing samples every 1.5s
+```
+
+## Topics
+
+The dashboard subscribes to three wildcard-capable topics, editable in the **MQTT** tab:
+
+| Source | Default topic | Notes |
+| --- | --- | --- |
+| BirdNET-Pi | `birdnet/detections` | BirdNET-Pi's MQTT output; `common_name`, `scientific_name`, `confidence`, `image` |
+| Meshtastic | `msh/+/json` | Meshtastic's JSON MQTT gateway (`+` matches the channel) |
+| Weather station | `weather/#` | e.g. `weather/station/1`; `temperature`, `humidity`, `pressure`, … |
+
+`+` matches exactly one topic level and `#` everything below it; the dashboard uses the
+same rules to decide which feed a message belongs to.
+
+## HTTP contract
+
+| Route | Method | Purpose |
+| --- | --- | --- |
+| `/health` | `GET` | `{ok, connected, host, port, messages, uptime}` |
+| `/config` | `GET` | the active config (password omitted from the reply) |
+| `/config` | `POST` | `{broker, topics}` — validated (400 on a bad port/host), persisted, applied live |
+| `/stream` | `GET` | `text/event-stream` of `data: {…}` frames |
+
+Each SSE frame is a JSON object:
+
+```jsonc
+{ "type": "status",  "connected": true, "host": "127.0.0.1", "port": 1883, "error": null, "receivedAt": 1767225600000 }
+{ "type": "config",  "config": { "broker": { … }, "topics": { … } } }
+{ "type": "message", "topic": "birdnet/detections", "payloadText": "{\"common_name\":\"Eurasian Wren\"}", "receivedAt": 1767225600123 }
+```
+
+The stream starts with `retry: 3000` and a comment `: ping` every 15s, so a browser
+`EventSource` reconnects on its own. A `POST /config` that does not actually change the
+broker or topics will **not** disturb the live connection.
+
+## Tests
+
+```sh
+npm run test:mqtt                     # codec + mock broker + HTTP/SSE, then the real aedes broker
+node bridge/test-broker.mjs --publish # run the fixture broker on its own
+```
+
+`bridge/test-broker.mjs` wraps [`aedes`](https://github.com/moscajs/aedes) — a real,
+independent MQTT 3.1.1 broker. The suite runs the bridge against it as well as against a
+hand-rolled mock, because a mock that shares the bridge's framing assumptions cannot
+catch a malformed packet (the aedes pass is what proves the CONNECT/SUBSCRIBE bytes are
+actually valid).
+
+## Deliberately not included
+
+No MQTT 5 features, no QoS 2, no retained-message replay on subscribe, no TLS client
+certificates, no `$SYS` handling, and no auth beyond username/password. The bridge
+relays messages verbatim — parsing into the three feeds happens in the browser
+(`src/utils/mqttParse.ts`).

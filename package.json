@@ -18,7 +18,10 @@
     "list:ports": "node bridge/list-ports.mjs",
     "desktop": "npm run build && electron .",
     "desktop:smoke": "npm run build && electron . --smoke-test --no-sandbox",
-    "desktop:build": "npm run build && electron-builder --linux AppImage"
+    "desktop:build": "npm run build && electron-builder --linux AppImage",
+    "bridge:mqtt": "node bridge/mqtt-bridge.mjs",
+    "test:mqtt": "node bridge/test-mqtt-bridge.mjs",
+    "broker:test": "node bridge/test-broker.mjs --publish"
   },
   "dependencies": {
     "leaflet": "^1.9.4",
@@ -33,6 +36,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
+    "aedes": "^1.2.0",
     "electron": "^44.5.1",
     "electron-builder": "^26.15.3",
     "esbuild": "^0.28.0",
@@ -64,6 +68,8 @@
           "osc-bridge.mjs",
           "serial-ports.mjs",
           "list-ports.mjs",
+          "mqtt-bridge.mjs",
+          "mosquitto.example.conf",
           "README.md"
         ]
       }

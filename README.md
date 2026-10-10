@@ -122,6 +122,38 @@ and resets controllers.
 Web MIDI needs permission: Chrome asks on first use. If it is denied or the
 browser has no MIDI support, the panel says so instead of failing silently.
 
+### MQTT tab — live BirdNET / Meshtastic / weather feeds
+
+Browsers cannot open a raw TCP connection to an MQTT broker, so a small local Node
+bridge subscribes on your behalf and relays everything to the page over
+**Server-Sent Events**. Start it next to the dashboard:
+
+```sh
+npm run bridge:mqtt                    # subscribes to 127.0.0.1:1883 by default
+npm run bridge:mqtt -- --launch-mosquitto   # also spawn a local Mosquitto, if installed
+```
+
+Then open the **MQTT** tab, set the broker (host, port, TLS, username, password) and
+the topic for each source, and press **Connect**:
+
+| Source | Default topic |
+| --- | --- |
+| BirdNET-Pi detections | `birdnet/detections` |
+| Meshtastic JSON gateway | `msh/+/json` |
+| Weather stations | `weather/#` |
+
+The panel shows a live feed per source: BirdNET detections (species, scientific name,
+confidence), Meshtastic node telemetry (temperature, humidity, pressure, battery,
+voltage, position) and weather readings. MQTT wildcards work — `+` matches one topic
+level and `#` matches everything below it. Config is stored in `localStorage` and
+mirrored into the bridge, so credentials never live in the page bundle and the
+subscription keeps running while you use other tabs.
+
+No broker yet? `npm run broker:test` starts a real `aedes` broker that publishes sample
+BirdNET, Meshtastic and weather messages every 1.5s. See
+[`bridge/README.md`](bridge/README.md#mqtt-ingest-bridge) for the CLI flags, the
+HTTP/SSE contract and Mosquitto setup.
+
 ### Panels
 
 Every panel (left-rail sections, map, serial monitor, points log, node list,

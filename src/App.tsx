@@ -12,6 +12,7 @@ import { Panel, PanelResetContext, clearPanelLayout } from './components/Panel';
 import { parseTelemetryLine, summariseTelemetry, TelemetrySample } from './utils/telemetry';
 import { loadOscConfig, type OscClientConfig } from './utils/oscClient';
 import { loadMidiConfig, type MidiConfig } from './utils/midi';
+import { loadMqttConfig, type MqttConfig } from './utils/mqttClient';
 import { configureOsc, ingestOutputs } from './utils/outputs';
 import { releaseSerialSession } from './utils/serialSession';
 import {
@@ -32,6 +33,9 @@ const TelemetryPanel = lazy(() =>
 );
 const OutputsPanel = lazy(() =>
   import('./components/OutputsPanel').then((module) => ({ default: module.OutputsPanel }))
+);
+const MqttPanel = lazy(() =>
+  import('./components/MqttPanel').then((module) => ({ default: module.MqttPanel }))
 );
 
 /** Placeholder shown while a split view is fetched (usually one frame). */
@@ -140,7 +144,7 @@ export default function App() {
   // GPS State
   const [points, setPoints] = useState<GpsPoint[]>([]);
   const [activeTab, setActiveTab] = useState<
-    'map' | 'terminal' | 'points' | 'telemetry' | 'outputs'
+    'map' | 'terminal' | 'points' | 'telemetry' | 'outputs' | 'mqtt'
   >('map');
   const [autoCenter, setAutoCenter] = useState(true);
 
@@ -151,6 +155,7 @@ export default function App() {
   // the output modules; App only owns the React copy the Outputs tab edits.
   const [oscConfig, setOscConfig] = useState<OscClientConfig>(() => loadOscConfig());
   const [midiConfig, setMidiConfig] = useState<MidiConfig>(() => loadMidiConfig());
+  const [mqttConfig, setMqttConfig] = useState<MqttConfig>(() => loadMqttConfig());
 
   // Mirror of `telemetrySamples` for the output dispatch: the serial read loop
   // must not wait for React to flush before it can roll telemetry up, and the
@@ -249,6 +254,11 @@ export default function App() {
     // `OutputsPanel` persists and applies it through `utils/midi`; App keeps the
     // React copy that both tabs and the panel render from.
     setMidiConfig(next);
+  }, []);
+
+  const handleMqttConfigChange = useCallback((next: MqttConfig) => {
+    // `MqttPanel` persists and pushes it to the bridge; App keeps the React copy.
+    setMqttConfig(next);
   }, []);
 
   const hiddenNodeSet = useMemo(() => new Set(hiddenNodeKeys), [hiddenNodeKeys]);
@@ -1131,6 +1141,17 @@ export default function App() {
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500" title="OSC output enabled" />
                 )}
               </button>
+            <button
+              onClick={() => setActiveTab('mqtt')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                activeTab === 'mqtt'
+                  ? 'bg-slate-900 text-slate-100 shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Radio className="w-3.5 h-3.5 text-cyan-600" />
+              <span>MQTT</span>
+            </button>
             </nav>
 
             {/* Zone 3: Primary Actions */}
@@ -1405,6 +1426,30 @@ export default function App() {
                 </Panel>
               </div>
             )}
+          {activeTab === 'mqtt' && (
+            <div className="space-y-4">
+              <Panel
+                id="mqtt-dashboard"
+                title="MQTT Ingest"
+                icon={<Radio className="w-3.5 h-3.5 text-cyan-600" />}
+                variant="light"
+                defaultWidth={1040}
+                defaultHeight={720}
+                minWidth={420}
+                minHeight={320}
+                bodyClassName="p-0 overflow-y-auto"
+                actions={
+                  <span className="text-[10px] font-mono text-slate-400 whitespace-nowrap">
+                    {mqttConfig.broker.host}:{mqttConfig.broker.port}
+                  </span>
+                }
+              >
+                <Suspense fallback={<TabLoading label="mqtt" />}>
+                  <MqttPanel mqttConfig={mqttConfig} onMqttConfigChange={handleMqttConfigChange} />
+                </Suspense>
+              </Panel>
+            </div>
+          )}
           </main>
         </div>
       </div>

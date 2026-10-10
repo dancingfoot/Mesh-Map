@@ -10,3 +10,6 @@ coverage/
 # Chromium singleton files, written when a headless browser uses this directory
 # as its profile (e.g. automated UI checks).
 Singleton*
+
+# The MQTT bridge persists the broker config (including credentials) at runtime.
+bridge/mqtt-config.json
