@@ -1,0 +1,132 @@
+name: CI
+
+# Tests run on every push and pull request. The AppImage is only built when it
+# could plausibly be shipped (main, a version tag, or a manual run) — it is a
+# ~125 MB artifact and the packaging step is the slow one.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Also publish a GitHub Release with this tag (e.g. v1.0.0). Leave empty to just build the artifact.'
+        required: false
+        type: string
+
+# `contents: write` is what lets the release step create a Release with the
+# AppImage attached; the default token is read-only otherwise.
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test & type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: OSC bridge tests
+        run: npm run test:bridge
+
+      - name: Serial-port tests
+        run: npm run test:ports
+
+      # Runs the MQTT codec against a mock broker *and* against a real `aedes`
+      # broker, which is what proves the CONNECT/SUBSCRIBE bytes are valid.
+      - name: MQTT bridge tests
+        run: npm run test:mqtt
+
+      - name: Production build
+        run: npm run build
+
+  appimage:
+    name: Build AppImage
+    needs: test
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name != 'pull_request'
+      && (github.ref == 'refs/heads/main'
+          || startsWith(github.ref, 'refs/tags/v')
+          || github.event_name == 'workflow_dispatch')
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # `desktop:build` runs the Vite build, then electron-builder. It passes
+      # `--publish never`, so packaging never tries to release on its own — the
+      # step below owns publishing.
+      - name: Build the AppImage
+        run: npm run desktop:build
+
+      - name: Checksums
+        run: |
+          cd release
+          sha256sum ./*.AppImage > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Upload the AppImage as a workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mesh-Map-AppImage
+          path: |
+            release/*.AppImage
+            release/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
+
+      # Publishing is tag-driven (or an explicit dispatch input). `gh` is
+      # preinstalled on the runner, so no third-party release action is needed.
+      - name: Publish to GitHub Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_TAG: ${{ github.event.inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          tag=""
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            tag="${GITHUB_REF#refs/tags/}"
+          fi
+          if [[ -n "${INPUT_TAG}" ]]; then
+            tag="${INPUT_TAG}"
+          fi
+          if [[ -z "${tag}" ]]; then
+            echo "Not a version tag and no release_tag input — artifact only, skipping the release."
+            exit 0
+          fi
+          echo "Publishing release ${tag}"
+          if gh release view "${tag}" >/dev/null 2>&1; then
+            # Re-running a tag build should replace the asset, not fail.
+            gh release upload "${tag}" release/*.AppImage release/SHA256SUMS.txt --clobber
+          else
+            gh release create "${tag}" \
+              --title "Mesh Map ${tag}" \
+              --generate-notes \
+              release/*.AppImage release/SHA256SUMS.txt
+          fi

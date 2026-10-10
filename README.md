@@ -253,6 +253,27 @@ only thing needing the network is the map tiles themselves.
 | `linux` | `release/Mesh-Map-1.0.0-x86_64.AppImage` (also `release/linux-unpacked/`) |
 | icon | `build/icon.png` (512×512 RGBA, generated from `build/icon.svg`) |
 
+### Releases (CI)
+
+`.github/workflows/ci.yml` runs the test suite (`lint`, `vitest`, and the three
+bridge suites) on every push to `main` and every pull request, then builds the
+AppImage. The AppImage is published to **GitHub Releases** when you push a version
+tag:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+That attaches `Mesh-Map-1.0.0-x86_64.AppImage` plus a `SHA256SUMS.txt` to a new
+release with generated notes. Re-running the same tag replaces the asset rather than
+failing.
+
+To build and attach a release without tagging, run the **CI** workflow from the
+Actions tab with `release_tag` set (e.g. `v1.0.0`); leaving it empty just produces a
+downloadable workflow artifact. Keep `version` in `package.json` in step with the tag
+so the filename matches.
+
 ## Requirements
 
 * **Node ≥ 20**

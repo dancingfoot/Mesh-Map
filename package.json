@@ -18,7 +18,7 @@
     "list:ports": "node bridge/list-ports.mjs",
     "desktop": "npm run build && electron .",
     "desktop:smoke": "npm run build && electron . --smoke-test --no-sandbox",
-    "desktop:build": "npm run build && electron-builder --linux AppImage",
+    "desktop:build": "npm run build && electron-builder --linux AppImage --publish never",
     "bridge:mqtt": "node bridge/mqtt-bridge.mjs",
     "test:mqtt": "node bridge/test-mqtt-bridge.mjs",
     "broker:test": "node bridge/test-broker.mjs --publish"
