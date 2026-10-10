@@ -1,9 +1,13 @@
 # Mesh Map — Meshtastic Real-Time GPS & Telemetry Dashboard
 
+[![CI](https://github.com/dancingfoot/Mesh-Map/actions/workflows/ci.yml/badge.svg)](https://github.com/dancingfoot/Mesh-Map/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/dancingfoot/Mesh-Map?label=download)](https://github.com/dancingfoot/Mesh-Map/releases/latest)
+
 A browser dashboard that reads a Meshtastic node over **Web Serial**, parses
 everything the mesh sends — GPS fixes *and* telemetry — and shows it per node on
 an interactive Leaflet map. Telemetry can be re-emitted as **OSC** or **MIDI** to
-drive music/visual software.
+drive music/visual software. Linux builds are published to
+[Releases](https://github.com/dancingfoot/Mesh-Map/releases) as an AppImage.
 
 ## Quick start
 
