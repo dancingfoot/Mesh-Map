@@ -6,8 +6,15 @@
  * requirement, not a nicety. These tests pin that behaviour: reuse the preferred
  * port, step to the next one when it is busy, and never leak outside the served
  * directory.
+ *
+ * The served directory is a throwaway fixture rather than the real `dist/`: that
+ * is a build artifact (and gitignored), so depending on it made these tests pass
+ * only on a machine that had already run `npm run build`.
  */
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { startStaticServer } from '../../desktop/static-server.mjs';
 
 /** Shape returned by the launcher's static server. */
@@ -19,6 +26,31 @@ interface StaticServerHandle {
 
 const open: StaticServerHandle[] = [];
 
+/** Fixture root; the served directory is `<tempRoot>/dist`, as in the app. */
+let tempRoot = '';
+let servedDir = '';
+
+beforeAll(() => {
+  tempRoot = mkdtempSync(join(tmpdir(), 'meshmap-static-server-'));
+  servedDir = join(tempRoot, 'dist');
+  mkdirSync(join(servedDir, 'assets'), { recursive: true });
+  writeFileSync(
+    join(servedDir, 'index.html'),
+    '<!doctype html><html><body><div id="root"></div></body></html>'
+  );
+  writeFileSync(join(servedDir, 'assets', 'app.js'), 'console.log("fixture");');
+
+  // Decoys *outside* the served directory. The traversal test asserts none of
+  // these ever reach a client, so they must contain recognisable markers.
+  writeFileSync(join(tempRoot, 'package.json'), JSON.stringify({ name: 'mesh-map' }));
+  mkdirSync(join(tempRoot, 'desktop'), { recursive: true });
+  writeFileSync(join(tempRoot, 'desktop', 'main.mjs'), 'const DEFAULT_APP_PORT = 6374;\n');
+});
+
+afterAll(() => {
+  if (tempRoot) rmSync(tempRoot, { recursive: true, force: true });
+});
+
 afterEach(async () => {
   for (let server = open.pop(); server; server = open.pop()) {
     await server.close();
@@ -26,7 +58,7 @@ afterEach(async () => {
 });
 
 async function start(options?: { preferredPort?: number }): Promise<StaticServerHandle> {
-  const server = (await startStaticServer('dist', options)) as StaticServerHandle;
+  const server = (await startStaticServer(servedDir, options)) as StaticServerHandle;
   open.push(server);
   return server;
 }
@@ -79,13 +111,14 @@ describe('startStaticServer', () => {
     for (const path of [
       '../package.json',
       '%2e%2e%2fpackage.json',
-      '%2e%2e%2f%2e%2e%2fdesktop%2fmain.mjs',
+      '../desktop/main.mjs',
+      '%2e%2e%2fdesktop%2fmain.mjs',
       '..%2f..%2f..%2fetc%2fpasswd',
     ]) {
       const response = await fetch(`${server.url}${path}`);
       const body = await response.text();
-      expect(body).not.toContain('"name": "mesh-map"'); // leaked package.json
-      expect(body).not.toContain('DEFAULT_APP_PORT'); // leaked main.mjs
+      expect(body).not.toContain('"name":"mesh-map"'); // leaked package.json
+      expect(body).not.toContain('DEFAULT_APP_PORT'); // leaked desktop/main.mjs
       expect(body).not.toContain('root:x:'); // leaked /etc/passwd
     }
   });

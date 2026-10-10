@@ -1,8 +1,8 @@
 name: CI
 
-# Tests run on every push and pull request. The AppImage is only built when it
-# could plausibly be shipped (main, a version tag, or a manual run) — it is a
-# ~125 MB artifact and the packaging step is the slow one.
+# Tests run on every pull request and every push to main. The AppImage is only
+# built when it could plausibly be shipped (main, a version tag, or a manual
+# run) — it is a ~120 MB artifact and packaging is the slow step.
 on:
   push:
     branches: [main]
