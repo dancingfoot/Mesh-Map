@@ -1,0 +1,67 @@
+name: Build and Release Linux AppImage
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-appimage:
+    name: Build Linux AppImage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build web application
+        run: npm run build
+
+      - name: Package Linux AppImage
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --linux AppImage
+
+      - name: Upload AppImage Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mesh-Map-Linux-AppImage
+          path: release/*.AppImage
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: "Mesh-Map v1.0.${{ github.run_number }} (Linux AppImage)"
+          body: |
+            ### Mesh-Map Automated Release (Build ${{ github.run_number }})
+            
+            Autonomous tactical LoRa mesh visualization, GIS node tracker, telemetry ingest, and BirdNET acoustic species sensor monitor.
+            
+            #### Assets Included
+            - Linux 64-bit AppImage (executable bundle, no installation required)
+            
+            #### How to Run on Linux
+            ```bash
+            chmod +x Mesh-Map-*.AppImage
+            ./Mesh-Map-*.AppImage
+            ```
+          draft: false
+          prerelease: false
+          files: release/*.AppImage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

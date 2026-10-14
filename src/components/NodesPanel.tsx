@@ -48,15 +48,15 @@ export const NodesPanel: React.FC<NodesPanelProps> = ({
   const visibleCount = summaries.filter((s) => isVisible(s.key)).length;
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       {/* Small show/hide-everything pair + a compact counter */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         <button
           type="button"
           onClick={onShowAll}
           disabled={summaries.length === 0}
           title="Show every node trace"
-          className="px-1.5 py-0.5 rounded border border-slate-300 bg-white/70 text-[9px] font-semibold text-slate-600 hover:bg-white disabled:opacity-40 transition-colors"
+          className="px-2 py-0.5 rounded-md border border-slate-700 bg-slate-800/90 text-[10px] font-semibold text-slate-200 hover:bg-slate-700 disabled:opacity-40 transition-colors"
         >
           All
         </button>
@@ -65,47 +65,47 @@ export const NodesPanel: React.FC<NodesPanelProps> = ({
           onClick={onHideAll}
           disabled={summaries.length === 0}
           title="Hide every node trace"
-          className="px-1.5 py-0.5 rounded border border-slate-300 bg-white/70 text-[9px] font-semibold text-slate-600 hover:bg-white disabled:opacity-40 transition-colors"
+          className="px-2 py-0.5 rounded-md border border-slate-700 bg-slate-800/90 text-[10px] font-semibold text-slate-200 hover:bg-slate-700 disabled:opacity-40 transition-colors"
         >
           None
         </button>
-        <span className="ml-auto text-[9px] font-mono text-slate-500 tabular-nums">
-          {visibleCount}/{summaries.length} · {shownCount}/{windowedCount} pkts
+        <span className="ml-auto text-[10px] font-mono text-slate-400 tabular-nums">
+          {visibleCount}/{summaries.length} nodes · {shownCount}/{windowedCount} pkts
         </span>
       </div>
 
       {summaries.length === 0 ? (
-        <div className="flex flex-col items-center gap-1 py-4 text-center text-[10px] text-slate-500">
-          <RadioTower className="w-4 h-4 opacity-50" />
-          <span>No nodes in this time window.</span>
+        <div className="flex flex-col items-center gap-1.5 py-6 text-center text-xs text-slate-400">
+          <RadioTower className="w-5 h-5 opacity-40 text-blue-400" />
+          <span>No mesh nodes active in this window.</span>
         </div>
       ) : (
-        <ul className="space-y-1">
+        <ul className="space-y-1.5 max-h-[360px] overflow-y-auto pr-0.5">
           {summaries.map((node) => {
             const visible = isVisible(node.key);
             const soloed = soloKey === node.key;
             return (
               <li
                 key={node.key}
-                className={`rounded border px-1.5 py-1 transition-colors ${
+                className={`rounded-lg border px-2 py-1.5 transition-all ${
                   soloed
-                    ? 'border-blue-400 bg-blue-50/90'
+                    ? 'border-blue-500 bg-blue-950/60 shadow-sm shadow-blue-900/30'
                     : visible
-                    ? 'border-slate-300/70 bg-white/70'
-                    : 'border-slate-300/50 bg-white/40 opacity-60'
+                    ? 'border-slate-800 bg-slate-900/90 hover:border-slate-700'
+                    : 'border-slate-800/60 bg-slate-900/40 opacity-50'
                 }`}
               >
-                <div className="flex items-center gap-1.5">
-                  {/* Colour swatch — same colour as the map trace/markers */}
+                <div className="flex items-center gap-2">
+                  {/* Colour swatch */}
                   <span
                     className={`w-2.5 h-2.5 rounded-full shrink-0 border ${
-                      node.isStale ? 'border-dashed border-amber-500 bg-transparent' : 'border-slate-400/70'
+                      node.isStale ? 'border-dashed border-amber-400 bg-transparent' : 'border-slate-300'
                     }`}
                     style={node.isStale ? undefined : { backgroundColor: node.color }}
                     aria-hidden="true"
                   />
                   <span
-                    className="font-mono text-[10px] font-semibold text-slate-700 truncate"
+                    className="font-mono text-[11px] font-bold text-slate-100 truncate"
                     title={
                       node.longLabel
                         ? `${node.label} — ${node.longLabel} (${node.key})`
@@ -116,8 +116,8 @@ export const NodesPanel: React.FC<NodesPanelProps> = ({
                   >
                     {node.label}
                   </span>
-                  <span className="ml-auto text-[9px] font-mono text-slate-500 shrink-0 tabular-nums">
-                    {node.count}×
+                  <span className="ml-auto text-[10px] font-mono text-cyan-400/90 shrink-0 tabular-nums">
+                    {node.count} pkts
                   </span>
 
                   <button
@@ -126,43 +126,42 @@ export const NodesPanel: React.FC<NodesPanelProps> = ({
                     title={visible ? 'Hide this node trace' : 'Show this node trace'}
                     aria-label={visible ? 'Hide node' : 'Show node'}
                     aria-pressed={visible}
-                    className={`p-0.5 rounded transition-colors ${
+                    className={`p-1 rounded-md transition-colors ${
                       visible
-                        ? 'text-emerald-600 hover:bg-emerald-50'
-                        : 'text-slate-400 hover:text-slate-600'
+                        ? 'text-emerald-400 hover:bg-emerald-950/60'
+                        : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'
                     }`}
                   >
-                    {visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                    {visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                   </button>
 
                   <button
                     type="button"
                     onClick={() => onToggleSolo(node.key)}
                     title={
-                      soloed ? 'Stop soloing this node' : 'Show only this node (Solo)'
+                      soloed ? 'Stop soloing this node' : 'Solo: show only this node'
                     }
                     aria-label={soloed ? 'Unsolo node' : 'Solo node'}
                     aria-pressed={soloed}
-                    className={`p-0.5 rounded transition-colors ${
+                    className={`p-1 rounded-md transition-colors ${
                       soloed
                         ? 'bg-blue-600 text-white'
-                        : 'text-slate-400 hover:text-slate-700 hover:bg-white'
+                        : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
                     }`}
                   >
-                    <Crosshair className="w-3 h-3" />
+                    <Crosshair className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
-                <div className="pl-4 text-[9px] font-mono text-slate-500 truncate">
-                  {/* A database fix is not a live one — say so before anything else. */}
+                <div className="pl-4.5 text-[10px] font-mono text-slate-400 truncate mt-0.5">
                   {node.isStale && (
-                    <span className="text-amber-600 font-semibold">last known · </span>
+                    <span className="text-amber-400 font-semibold">last known · </span>
                   )}
-                  {/* The short name is terse, so keep the descriptive name and the
-                      raw address visible underneath it. */}
-                  {node.longLabel && <span className="text-slate-400">{node.longLabel} · </span>}
-                  {node.label !== node.key && <span className="text-slate-400">{node.key} · </span>}
-                  {node.distanceKm.toFixed(2)} km · {formatRelativeTime(node.lastSeen, now)}
+                  {node.longLabel && <span className="text-slate-300">{node.longLabel} · </span>}
+                  {node.label !== node.key && <span className="text-slate-500">{node.key} · </span>}
+                  <span className="text-slate-300">{node.distanceKm.toFixed(2)} km</span>
+                  <span className="text-slate-500"> · </span>
+                  <span>{formatRelativeTime(node.lastSeen, now)}</span>
                 </div>
               </li>
             );

@@ -1,19 +1,60 @@
+@import "leaflet/dist/leaflet.css";
 @import "tailwindcss";
 
-/*
- * The app shell is dark by design (rail, terminal, node list and the root all
- * use slate-900/950). Tailwind v4 defaults `dark:` to the OS preference, which
- * meant MetricsBar/PointsTable flipped to dark on a dark-preferring desktop
- * while every other component stayed light. Switching the variant to a class
- * and putting `dark` on the root makes the whole UI render one theme.
- */
 @custom-variant dark (&:where(.dark, .dark *));
 
-@keyframes ping {
-  75%, 100% {
-    transform: scale(2);
-    opacity: 0;
+:root {
+  /* MeshDash C2 Master Operational Theme Tokens */
+  --acc: #00c8f5;
+  --acc-glow: rgba(0, 200, 245, 0.2);
+  --acc-dim: rgba(0, 200, 245, 0.08);
+  --ok: #00e87a;
+  --ok-glow: rgba(0, 232, 122, 0.2);
+  --warn: #ffa826;
+  --err: #ff3050;
+  --pur: #b060ff;
+
+  --bg: #0a1018;
+  --bg1: #0d1520;
+  --bg2: #111a28;
+  --bg3: #162030;
+  --bg4: #1c2a3c;
+
+  --bd: #1e3048;
+  --bd2: #284058;
+  --bd3: #305878;
+
+  --txt: #9bb5cf;
+  --txt2: #b8c8d8;
+  --txt3: #88a0b8;
+}
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: #0a1018;
+    color: #9bb5cf;
   }
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    font-feature-settings: 'tnum' 1;
+  }
+}
+
+/* Custom Tactical Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #0a1018;
+}
+::-webkit-scrollbar-thumb {
+  background: #284058;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 200, 245, 0.4);
 }
 
 .custom-start-marker,
@@ -25,29 +66,65 @@
 }
 
 .leaflet-container {
-  font-family: inherit;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: #0a1018 !important;
 }
 
 .leaflet-popup-content-wrapper {
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  background: #111a28 !important;
+  color: #e2e8f0 !important;
+  border: 1px solid #284058 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(8px);
 }
 
-/*
- * Leaflet's controls (zoom, scale, attribution) and the app's own map overlays
- * are left LIGHT and translucent on purpose: they float on the light map tiles,
- * so dark chrome there read as a theme clash. Only the surrounding app shell is
- * dark. Popups keep their own light styling for the same reason (their text
- * colours are fixed in utils/mapLayers.ts).
- */
+.leaflet-popup-tip {
+  background: #111a28 !important;
+  border: 1px solid #284058 !important;
+}
+
+.leaflet-popup-content {
+  margin: 10px 12px !important;
+  line-height: 1.4 !important;
+}
+
+.leaflet-control-zoom a {
+  background-color: #111a28 !important;
+  color: #9bb5cf !important;
+  border-color: #284058 !important;
+  transition: all 0.15s ease-in-out;
+}
+
+.leaflet-control-zoom a:hover {
+  background-color: #162030 !important;
+  color: #00c8f5 !important;
+}
+
 .leaflet-control-attribution,
 .leaflet-control-scale-line {
-  background: rgba(255, 255, 255, 0.75);
-  color: #475569;
-  border-color: rgba(148, 163, 184, 0.5);
+  background: rgba(17, 26, 40, 0.85) !important;
+  color: #88a0b8 !important;
+  border-color: #284058 !important;
+  backdrop-filter: blur(4px);
+  border-radius: 4px;
 }
 
 .leaflet-control-attribution a {
-  color: #1d4ed8;
+  color: #00c8f5 !important;
 }
 
+/* MeshDash signal bars */
+.sig-bar {
+  width: 3px;
+  border-radius: 1px;
+  background: #284058;
+}
+.sig-bar.lit {
+  background: #00c8f5;
+}
+
+/* Keyless Tactical Dark: Inverted OpenStreetMap tiles (crisp, high-contrast night vision theme) */
+.leaflet-tile.tactical-dark-tiles {
+  filter: brightness(0.72) invert(1) contrast(2.4) hue-rotate(185deg) saturate(0.35) brightness(0.85) !important;
+}

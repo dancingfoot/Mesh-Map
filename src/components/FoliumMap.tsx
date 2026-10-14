@@ -42,6 +42,8 @@ interface FoliumMapProps {
    * controls.
    */
   overlay?: React.ReactNode;
+  onStartSimulation?: () => void;
+  onConnectSerial?: () => void;
 }
 
 /**
@@ -61,13 +63,15 @@ export const FoliumMap: React.FC<FoliumMapProps> = ({
   onTimeWindowChange,
   identities,
   overlay,
+  onStartSimulation,
+  onConnectSerial,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapWrapperRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
-  const baseLayersRef = useRef<{ osm: L.TileLayer; satellite: L.TileLayer } | null>(null);
-  const [activeLayer, setActiveLayer] = React.useState<'osm' | 'satellite'>('osm');
+  const baseLayersRef = useRef<{ dark: L.TileLayer; osm: L.TileLayer; satellite: L.TileLayer } | null>(null);
+  const [activeLayer, setActiveLayer] = React.useState<'dark' | 'osm' | 'satellite'>('osm');
   const [isFullscreen, setIsFullscreen] = React.useState<boolean>(false);
 
   // When the map lives in a floating panel it fills the (resizable) body.
@@ -147,7 +151,13 @@ export const FoliumMap: React.FC<FoliumMapProps> = ({
     // Scale control at bottom left (matching Folium control_scale=True)
     L.control.scale({ imperial: true, metric: true, position: 'bottomleft' }).addTo(map);
 
-    // Base layers
+    // Base layers: Keyless Tactical Dark (Inverted OpenStreetMap), Standard Street (OpenStreetMap), and Esri Satellite
+    const darkLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      className: 'tactical-dark-tiles',
+    });
+
     const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -162,7 +172,7 @@ export const FoliumMap: React.FC<FoliumMapProps> = ({
     );
 
     osmLayer.addTo(map);
-    baseLayersRef.current = { osm: osmLayer, satellite: satelliteLayer };
+    baseLayersRef.current = { dark: darkLayer, osm: osmLayer, satellite: satelliteLayer };
 
     const layerGroup = L.layerGroup().addTo(map);
     layerGroupRef.current = layerGroup;
@@ -175,16 +185,22 @@ export const FoliumMap: React.FC<FoliumMapProps> = ({
   }, []);
 
   // Switch Base Layer
-  const handleToggleLayer = (layer: 'osm' | 'satellite') => {
+  const handleToggleLayer = (layer: 'dark' | 'osm' | 'satellite') => {
     const map = mapInstanceRef.current;
     const baseLayers = baseLayersRef.current;
     if (!map || !baseLayers) return;
 
-    if (layer === 'osm') {
-      map.removeLayer(baseLayers.satellite);
+    // Remove current layers
+    map.removeLayer(baseLayers.dark);
+    map.removeLayer(baseLayers.osm);
+    map.removeLayer(baseLayers.satellite);
+
+    // Add selected layer
+    if (layer === 'dark') {
+      map.addLayer(baseLayers.dark);
+    } else if (layer === 'osm') {
       map.addLayer(baseLayers.osm);
     } else {
-      map.removeLayer(baseLayers.osm);
       map.addLayer(baseLayers.satellite);
     }
     setActiveLayer(layer);
@@ -342,14 +358,14 @@ export const FoliumMap: React.FC<FoliumMapProps> = ({
 
         {/* Floating Center Badge in Full Screen Mode */}
         {isFullscreen && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[450] bg-white/85 backdrop-blur-md text-slate-700 px-4 py-1.5 rounded-full border border-white/70 shadow-xl text-xs flex items-center gap-2">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[450] bg-slate-900/90 backdrop-blur-md text-slate-200 px-4 py-1.5 rounded-full border border-slate-700/80 shadow-2xl text-xs flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-semibold">Full Screen Map Active</span>
-            <span className="text-slate-400">·</span>
+            <span className="font-semibold text-slate-100">Full Screen Tactical Map Active</span>
+            <span className="text-slate-500">·</span>
             <span className="text-slate-400">ESC to exit</span>
             <button
               onClick={handleToggleFullscreen}
-              className="ml-1 p-1 hover:bg-white rounded-full text-slate-500 hover:text-slate-800"
+              className="ml-1 p-1 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors"
               title="Exit full screen"
             >
               <X className="w-3.5 h-3.5" />
@@ -357,26 +373,38 @@ export const FoliumMap: React.FC<FoliumMapProps> = ({
           </div>
         )}
 
-        {/* Floating HUD Controls (Street / Satellite) */}
-        <div className="absolute top-4 left-4 z-[400] flex items-center gap-2 bg-white/75 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/70 shadow-sm text-xs">
-          <span className="font-semibold text-slate-600">Map View:</span>
+        {/* Floating HUD Controls (Street / Tactical Dark / Satellite) */}
+        <div className="absolute top-4 left-4 z-[400] flex items-center gap-1.5 bg-slate-900/90 backdrop-blur-md p-1 rounded-xl border border-slate-700/80 shadow-2xl text-xs">
           <button
             onClick={() => handleToggleLayer('osm')}
-            className={`px-2 py-1 rounded font-medium transition-colors ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
               activeLayer === 'osm'
-                ? 'bg-blue-600 text-white'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-blue-600 text-white shadow-sm font-semibold'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
             }`}
+            title="OpenStreetMap Standard street tiles (Default)"
           >
-            Street
+            Street (OSM)
+          </button>
+          <button
+            onClick={() => handleToggleLayer('dark')}
+            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+              activeLayer === 'dark'
+                ? 'bg-blue-600 text-white shadow-sm font-semibold'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+            }`}
+            title="Keyless Tactical Dark mode (Inverted OSM)"
+          >
+            Tactical Dark
           </button>
           <button
             onClick={() => handleToggleLayer('satellite')}
-            className={`px-2 py-1 rounded font-medium transition-colors ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
               activeLayer === 'satellite'
-                ? 'bg-blue-600 text-white'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-blue-600 text-white shadow-sm font-semibold'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
             }`}
+            title="Esri World Imagery satellite view"
           >
             Satellite
           </button>
@@ -384,20 +412,19 @@ export const FoliumMap: React.FC<FoliumMapProps> = ({
 
         {/* Top Right Quick Actions */}
         <div className="absolute top-4 right-4 z-[400] flex items-center gap-2">
-          {/* REQUIREMENT: Add a button to full screen the map */}
           <button
             onClick={handleToggleFullscreen}
             title={isFullscreen ? 'Exit Full Screen (Esc)' : 'Full Screen Map View'}
-            className={`flex items-center gap-1.5 backdrop-blur-md px-3 py-1.5 rounded-lg border shadow-sm text-xs font-semibold transition-colors ${
+            className={`flex items-center gap-1.5 backdrop-blur-md px-3 py-1.5 rounded-xl border shadow-xl text-xs font-semibold transition-all ${
               isFullscreen
-                ? 'bg-blue-600 text-white border-blue-500 hover:bg-blue-500'
-                : 'bg-white/80 border-white/70 text-slate-700 hover:bg-white'
+                ? 'bg-blue-600 text-white border-blue-500 hover:bg-blue-500 shadow-blue-900/30'
+                : 'bg-slate-900/90 border-slate-700/80 text-slate-200 hover:bg-slate-800 hover:text-white'
             }`}
           >
             {isFullscreen ? (
               <Minimize2 className="w-3.5 h-3.5 text-white" />
             ) : (
-              <Maximize2 className="w-3.5 h-3.5 text-blue-600" />
+              <Maximize2 className="w-3.5 h-3.5 text-blue-400" />
             )}
             <span>{isFullscreen ? 'Exit Full Screen' : 'Full Screen'}</span>
           </button>
@@ -406,9 +433,9 @@ export const FoliumMap: React.FC<FoliumMapProps> = ({
             onClick={handleFitBounds}
             disabled={points.length === 0}
             title="Fit entire route bounds"
-            className="flex items-center gap-1.5 bg-white/75 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/70 shadow-sm text-xs font-medium text-slate-300 hover:bg-slate-800 disabled:opacity-40 transition-colors"
+            className="flex items-center gap-1.5 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700/80 shadow-xl text-xs font-medium text-slate-200 hover:bg-slate-800 hover:text-white disabled:opacity-40 disabled:hover:bg-slate-900/90 transition-all"
           >
-            <Maximize2 className="w-3.5 h-3.5 text-blue-600" />
+            <Maximize2 className="w-3.5 h-3.5 text-blue-400" />
             <span>Fit Route</span>
           </button>
 
@@ -416,9 +443,9 @@ export const FoliumMap: React.FC<FoliumMapProps> = ({
             onClick={handleCenterLatest}
             disabled={points.length === 0}
             title="Center on latest location"
-            className="flex items-center gap-1.5 bg-white/75 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/70 shadow-sm text-xs font-medium text-slate-300 hover:bg-slate-800 disabled:opacity-40 transition-colors"
+            className="flex items-center gap-1.5 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700/80 shadow-xl text-xs font-medium text-slate-200 hover:bg-slate-800 hover:text-white disabled:opacity-40 disabled:hover:bg-slate-900/90 transition-all"
           >
-            <LocateFixed className="w-3.5 h-3.5 text-red-600" />
+            <LocateFixed className="w-3.5 h-3.5 text-rose-400" />
             <span>Latest Pin</span>
           </button>
 
@@ -426,14 +453,14 @@ export const FoliumMap: React.FC<FoliumMapProps> = ({
             <button
               onClick={onToggleAutoCenter}
               title={autoCenter ? 'Auto-centering is ON' : 'Auto-centering is OFF'}
-              className={`flex items-center gap-1.5 backdrop-blur-md px-3 py-1.5 rounded-lg border shadow-sm text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1.5 backdrop-blur-md px-3 py-1.5 rounded-xl border shadow-xl text-xs font-medium transition-all ${
                 autoCenter
-                  ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
-                  : 'bg-white/80 border-white/70 text-slate-500'
+                  ? 'bg-emerald-950/90 border-emerald-700/80 text-emerald-300'
+                  : 'bg-slate-900/90 border-slate-700/80 text-slate-400 hover:text-slate-200'
               }`}
             >
               <span
-                className={`w-2 h-2 rounded-full ${autoCenter ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}
+                className={`w-2 h-2 rounded-full ${autoCenter ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`}
               />
               <span>Auto-Center</span>
             </button>
@@ -441,68 +468,91 @@ export const FoliumMap: React.FC<FoliumMapProps> = ({
         </div>
 
         {/* Legend: one row per visible node, colour-matched to its trace */}
-        <div className="absolute bottom-5 right-14 z-[400] bg-white/80 backdrop-blur-md px-3 py-2 rounded-lg border border-white/70 shadow-md text-xs flex flex-col gap-1.5 max-w-[240px]">
-          <div className="flex items-center gap-1.5 text-slate-700 font-semibold">
-            <Layers className="w-3 h-3 text-blue-600" />
+        <div className="absolute bottom-5 right-14 z-[400] bg-slate-900/90 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-slate-700/80 shadow-2xl text-xs flex flex-col gap-2 max-w-[260px]">
+          <div className="flex items-center gap-1.5 text-slate-200 font-semibold border-b border-slate-800 pb-1.5">
+            <Layers className="w-3.5 h-3.5 text-blue-400" />
             <span>Visible nodes ({legend.length})</span>
           </div>
           {legend.length === 0 ? (
-            <span className="text-[11px] text-slate-500">No packets displayed</span>
+            <span className="text-[11px] text-slate-400">No packets displayed</span>
           ) : (
-            <div className="flex flex-col gap-1 max-h-40 overflow-y-auto pr-0.5">
+            <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto pr-0.5">
               {legend.map((entry) => (
                 <div key={entry.key} className="flex items-center gap-2">
                   <span
-                    className="w-4 h-1 rounded shrink-0"
+                    className="w-3.5 h-1.5 rounded-full shrink-0"
                     style={{ backgroundColor: entry.color }}
                     aria-hidden="true"
                   />
                   <span
-                    className="w-2 h-2 rounded-full shrink-0 border border-slate-400"
+                    className="w-2.5 h-2.5 rounded-full shrink-0 border border-slate-500"
                     style={{ backgroundColor: entry.color }}
                     aria-hidden="true"
                   />
-                  <span className="font-mono text-[11px] text-slate-700 truncate max-w-[110px]">
+                  <span className="font-mono text-[11px] text-slate-200 truncate max-w-[120px]">
                     {entry.label}
                   </span>
                   <span className="ml-auto text-[10px] font-mono text-slate-400 tabular-nums">
-                    {entry.count}
+                    {entry.count} pkts
                   </span>
                 </div>
               ))}
             </div>
           )}
-          <div className="pt-1 border-t border-slate-300/60 flex items-center gap-2 text-[10px] text-slate-500">
+          <div className="pt-1.5 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
             <span className="inline-flex items-center gap-1">
-              <span className="text-[8px]">▶</span> start
+              <span className="text-emerald-400 font-bold">▶</span> Start Fix
             </span>
             <span className="inline-flex items-center gap-1">
-              <span className="text-[8px]">●</span> latest
+              <span className="text-rose-400 font-bold">●</span> Current Fix
             </span>
           </div>
         </div>
 
         {/* Empty State Overlay */}
         {points.length === 0 && (
-          <div className="absolute inset-0 z-[300] bg-slate-900/20 backdrop-blur-[2px] flex items-center justify-center pointer-events-none">
-            <div className="bg-white/85 px-6 py-4 rounded-xl border border-white/70 shadow-lg text-center max-w-sm">
-              <div className="text-2xl mb-1">{total > 0 ? '🔍' : '📡'}</div>
-              <h4 className="text-sm font-semibold text-slate-100">
-                {total > 0 ? 'No packets match the current filters' : 'Awaiting Meshtastic GPS Fix'}
+          <div className="absolute inset-0 z-[300] bg-slate-950/40 backdrop-blur-[2px] flex items-center justify-center p-4">
+            <div className="bg-slate-900/95 border border-slate-700/90 rounded-2xl p-6 shadow-2xl backdrop-blur-md text-center max-w-md pointer-events-auto">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mx-auto mb-3">
+                <RadioTower className="w-6 h-6 animate-pulse" />
+              </div>
+              <h4 className="text-base font-bold text-slate-100">
+                {total > 0 ? 'No Packets In Current Window' : 'Awaiting Meshtastic GPS Fixes'}
               </h4>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
                 {total > 0 ? (
                   <>
-                    {total} packets are logged, but none are inside the selected time window or
-                    visible-node set. Widen the window or show more nodes.
+                    {total} packets are recorded in history, but none match the current time window or node filter.
                   </>
                 ) : (
                   <>
-                    Connect a serial node or click <strong>"Start Demo"</strong> in the left rail to
-                    stream simulated coordinates.
+                    Connect a LoRa radio via Web Serial USB or launch the simulated radio telemetry stream to watch real-time coordinate plotting.
                   </>
                 )}
               </p>
+              {total === 0 && (
+                <div className="flex items-center justify-center gap-3 mt-4">
+                  {onStartSimulation && (
+                    <button
+                      type="button"
+                      onClick={onStartSimulation}
+                      className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-lg shadow-md transition-colors flex items-center gap-2"
+                    >
+                      <RadioTower className="w-3.5 h-3.5" />
+                      <span>Start Demo Simulation</span>
+                    </button>
+                  )}
+                  {onConnectSerial && (
+                    <button
+                      type="button"
+                      onClick={onConnectSerial}
+                      className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium rounded-lg transition-colors"
+                    >
+                      Connect Hardware
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}

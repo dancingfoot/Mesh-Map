@@ -33,23 +33,24 @@ export function formatSpeed(pt: GpsPoint): string {
 /** Popup for a node's latest packet (colour-matched to the node trace). */
 export function currentPopupHtml(node: NodeSummary, pt: GpsPoint): string {
   return `
-    <div style="font-family: system-ui, sans-serif; min-width: 210px; padding: 2px;">
-      <div style="font-size: 11px; font-weight: 700; color: ${node.color}; text-transform: uppercase; margin-bottom: 4px;">
-        ● ${escapeHtml(node.label)} · LATEST
+    <div style="font-family: 'Plus Jakarta Sans', system-ui, sans-serif; min-width: 220px; padding: 2px;">
+      <div style="font-size: 11px; font-weight: 700; color: ${node.color}; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+        <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${node.color};"></span>
+        ${escapeHtml(node.label)} · CURRENT FIX
       </div>
-      <div style="font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 4px;">
+      <div style="font-size: 13px; font-weight: 600; font-family: monospace; color: #f8fafc; margin-bottom: 6px; letter-spacing: -0.02em;">
         ${pt.latitude.toFixed(6)}°, ${pt.longitude.toFixed(6)}°
       </div>
-      <div style="font-size: 12px; color: #475569; line-height: 1.5;">
-        <strong>Time:</strong> ${new Date(pt.timestamp).toLocaleTimeString()}<br/>
-        <strong>Altitude:</strong> ${formatAltitude(pt)}<br/>
-        <strong>Speed:</strong> ${formatSpeed(pt)}<br/>
-        <strong>Source:</strong> ${escapeHtml(pt.source)}<br/>
-        <strong>Node:</strong> ${escapeHtml(node.key)}<br/>
-        <strong>Packets:</strong> ${node.count}<br/>
+      <div style="font-size: 11px; color: #94a3b8; line-height: 1.6; border-top: 1px solid #334155; padding-top: 6px;">
+        <div style="display: flex; justify-content: space-between;"><strong style="color: #cbd5e1;">Time:</strong> <span>${new Date(pt.timestamp).toLocaleTimeString()}</span></div>
+        <div style="display: flex; justify-content: space-between;"><strong style="color: #cbd5e1;">Altitude:</strong> <span>${formatAltitude(pt)}</span></div>
+        <div style="display: flex; justify-content: space-between;"><strong style="color: #cbd5e1;">Speed:</strong> <span>${formatSpeed(pt)}</span></div>
+        <div style="display: flex; justify-content: space-between;"><strong style="color: #cbd5e1;">Source:</strong> <span>${escapeHtml(pt.source)}</span></div>
+        <div style="display: flex; justify-content: space-between;"><strong style="color: #cbd5e1;">Node:</strong> <span style="font-family: monospace;">${escapeHtml(node.key)}</span></div>
+        <div style="display: flex; justify-content: space-between;"><strong style="color: #cbd5e1;">Packets:</strong> <span>${node.count}</span></div>
         ${
           node.isStale
-            ? '<strong style="color: #B45309;">&#9888; Last known position</strong> (from the node database)<br/>'
+            ? '<div style="margin-top: 4px; color: #f59e0b; font-weight: 600;">&#9888; Last known position (node DB)</div>'
             : ''
         }
       </div>
@@ -60,21 +61,20 @@ export function currentPopupHtml(node: NodeSummary, pt: GpsPoint): string {
 /** Popup for a node's first packet. */
 export function startPopupHtml(node: NodeSummary, pt: GpsPoint): string {
   return `
-    <div style="font-family: system-ui, sans-serif; min-width: 190px; padding: 2px;">
+    <div style="font-family: 'Plus Jakarta Sans', system-ui, sans-serif; min-width: 200px; padding: 2px;">
       <div style="font-size: 11px; font-weight: 700; color: ${node.color}; text-transform: uppercase; margin-bottom: 4px;">
-        ▶ ${escapeHtml(node.label)} · START
+        ▶ ${escapeHtml(node.label)} · START FIX
       </div>
-      <div style="font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 2px;">
+      <div style="font-size: 13px; font-weight: 600; font-family: monospace; color: #f8fafc; margin-bottom: 4px;">
         ${pt.latitude.toFixed(6)}°, ${pt.longitude.toFixed(6)}°
       </div>
-      <div style="font-size: 12px; color: #64748b; line-height: 1.4;">
-        Time: ${new Date(pt.timestamp).toLocaleTimeString()}<br/>
-        Alt: ${formatAltitude(pt)}<br/>
-        Source: ${escapeHtml(pt.source)}<br/>
-        Packets from node: ${node.count}
+      <div style="font-size: 11px; color: #94a3b8; line-height: 1.5; border-top: 1px solid #334155; padding-top: 4px;">
+        <div>Time: ${new Date(pt.timestamp).toLocaleTimeString()}</div>
+        <div>Alt: ${formatAltitude(pt)} · Source: ${escapeHtml(pt.source)}</div>
+        <div>Packets logged: ${node.count}</div>
         ${
           node.isStale
-            ? '<br/><strong style="color: #B45309;">&#9888; Last known position</strong> (from the node database)'
+            ? '<div style="color: #f59e0b; font-weight: 600; margin-top: 2px;">&#9888; Last known position</div>'
             : ''
         }
       </div>

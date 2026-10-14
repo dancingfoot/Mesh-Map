@@ -1,18 +1,20 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mesh Map - Meshtastic Real-Time GPS Tracking Dashboard</title>
-    <meta name="description" content="Real-time Meshtastic node movement and GIS path tracking over Web Serial, with per-node traces, a node list and time-window filtering." />
-    <meta property="og:title" content="Mesh Map - Meshtastic Real-Time GPS Tracking Dashboard" />
-    <meta property="og:description" content="Real-time Meshtastic node movement and GIS path tracking over Web Serial, with per-node traces, a node list and time-window filtering." />
+    <title>Mesh-Map - Meshtastic GPS & Telemetry Dashboard</title>
+    <meta name="description" content="Real-time Meshtastic GPS tracking, telemetry analytics, interactive Leaflet map, node management, and OSC/MIDI output." />
+    <meta property="og:title" content="Mesh-Map - Meshtastic GPS & Telemetry Dashboard" />
+    <meta property="og:description" content="Real-time Meshtastic GPS tracking, telemetry analytics, interactive Leaflet map, node management, and OSC/MIDI output." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <!-- Inline SVG favicon: stops browsers from requesting /favicon.ico (404). -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%A1%3C/text%3E%3C/svg%3E" />
   </head>
-  <body>
+  <body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -13,3 +13,7 @@ Singleton*
 
 # The MQTT bridge persists the broker config (including credentials) at runtime.
 bridge/mqtt-config.json
+
+.git-token
+*.token
+.aistudio/

@@ -132,6 +132,20 @@ export class MqttClient {
     return { ...this.status };
   }
 
+  /** Injects a simulated test message directly into the listeners (for in-browser testing). */
+  simulateMessage(topic: string, payloadText: string): void {
+    const message: MqttMessage = { topic, payloadText, receivedAt: Date.now() };
+    this.setStatus({
+      ...this.status,
+      connected: true,
+      host: this.config.broker.host || 'simulator',
+      port: this.config.broker.port || 1883,
+      error: null,
+      messages: this.status.messages + 1,
+    });
+    this.messageListeners.forEach((listener) => listener(message));
+  }
+
   /** Applies + persists config and pushes it to the bridge. */
   async configure(config: MqttConfig): Promise<MqttConfig> {
     this.config = saveMqttConfig(config);

@@ -36,31 +36,31 @@ export const MapNodeOverlay: React.FC<MapNodeOverlayProps> = ({
   const [open, setOpen] = useState(true);
 
   return (
-    <div className="w-56 rounded-lg border border-white/70 bg-white/75 backdrop-blur-md shadow-lg text-slate-700 overflow-hidden">
+    <div className="w-64 rounded-xl border border-slate-700/80 bg-slate-900/90 backdrop-blur-md shadow-2xl text-slate-200 overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-label={open ? 'Collapse node list' : 'Expand node list'}
         title={open ? 'Collapse the node list' : 'Expand the node list'}
-        className="w-full flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-semibold hover:bg-white/70 transition-colors"
+        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold hover:bg-slate-800/80 transition-colors"
       >
-        <Users className="w-3 h-3 text-blue-600" />
-        <span>Nodes</span>
+        <Users className="w-3.5 h-3.5 text-blue-400" />
+        <span className="text-slate-100">Mesh Fleet</span>
         <span
-          className="px-1 py-0.5 rounded bg-slate-200/80 text-[9px] font-mono text-slate-600"
-          title={`${summaries.length} node(s) in the current time window`}
+          className="px-1.5 py-0.2 rounded bg-slate-800 border border-slate-700 text-[10px] font-mono text-cyan-300"
+          title={`${summaries.length} node(s) in current time window`}
         >
           {summaries.length}
         </span>
         <span className="ml-auto text-slate-400">
-          {open ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
+          {open ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
         </span>
       </button>
 
       {open && (
         <div
-          className="border-t border-white/70 max-h-[38vh] overflow-y-auto p-1.5"
+          className="border-t border-slate-800 max-h-[42vh] overflow-y-auto p-2"
           onPointerDownCapture={(event) => event.stopPropagation()}
           onWheelCapture={(event) => event.stopPropagation()}
         >

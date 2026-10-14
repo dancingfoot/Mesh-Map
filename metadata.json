@@ -1,0 +1,6 @@
+{
+  "name": "Mesh-Map - Meshtastic GPS & Telemetry Dashboard",
+  "description": "Real-time Meshtastic GPS tracking, telemetry analytics, interactive Leaflet map, node management, and OSC/MIDI output.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

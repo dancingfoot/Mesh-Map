@@ -1,20 +1,15 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {fileURLToPath} from 'url';
 import {defineConfig} from 'vite';
-
-// This config is ESM ("type": "module"), so `__dirname` only exists because Vite
-// still shims it; the native config loader warns about it and will drop it.
-// `fileURLToPath(new URL('.', import.meta.url))` works under both loaders.
-const projectRoot = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig(() => {
   return {
+    base: './',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        '@': path.resolve(projectRoot, '.'),
+        '@': path.resolve(__dirname, '.'),
       },
     },
     server: {

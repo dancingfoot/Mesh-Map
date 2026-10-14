@@ -47,28 +47,28 @@ export const PointsTable: React.FC<PointsTableProps> = ({ points, totalCount }) 
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div className="bg-slate-900/90 rounded-xl border border-slate-800 shadow-sm overflow-hidden">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-slate-800 gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Logged Coordinate Points</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <h3 className="text-sm font-bold text-slate-100">Logged Coordinate Points</h3>
+          <p className="text-xs text-slate-400 mt-0.5">
             {points.length === unfilteredCount
-              ? `${points.length} coordinates recorded in current session trace`
-              : `${points.length} of ${unfilteredCount} coordinates shown (time window / node filter)`}
+              ? `${points.length} GPS fixes logged in session trace`
+              : `${points.length} of ${unfilteredCount} fixes displayed (active window / filter)`}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Search Bar */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Filter coordinates..."
-              className="pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 w-44"
+              placeholder="Search points..."
+              className="pl-8 pr-3 py-1.5 text-xs bg-slate-950 border border-slate-700/80 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 w-44"
             />
           </div>
 
@@ -76,39 +76,39 @@ export const PointsTable: React.FC<PointsTableProps> = ({ points, totalCount }) 
           <button
             onClick={handleExportGeoJson}
             disabled={points.length === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg transition-colors disabled:opacity-40"
-            title="Export GeoJSON for QGIS / ArcGIS"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700/80 transition-colors disabled:opacity-40"
+            title="Export GeoJSON for QGIS / ArcGIS / Leaflet"
           >
-            <FileJson className="w-3.5 h-3.5 text-blue-600" />
+            <FileJson className="w-3.5 h-3.5 text-blue-400" />
             <span>GeoJSON</span>
           </button>
 
           <button
             onClick={handleExportGpx}
             disabled={points.length === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg transition-colors disabled:opacity-40"
-            title="Export GPX for Garmin / OsmAnd / Google Earth"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700/80 transition-colors disabled:opacity-40"
+            title="Export GPX for Garmin / OsmAnd / Handheld GPS"
           >
-            <Download className="w-3.5 h-3.5 text-emerald-600" />
+            <Download className="w-3.5 h-3.5 text-emerald-400" />
             <span>GPX</span>
           </button>
 
           <button
             onClick={handleExportCsv}
             disabled={points.length === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg transition-colors disabled:opacity-40"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700/80 transition-colors disabled:opacity-40"
             title="Export CSV spreadsheet"
           >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-amber-600" />
+            <FileSpreadsheet className="w-3.5 h-3.5 text-amber-400" />
             <span>CSV</span>
           </button>
         </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto max-h-[320px]">
+      <div className="overflow-x-auto max-h-[360px]">
         <table className="w-full text-left text-xs">
-          <thead className="bg-slate-50 dark:bg-slate-800/60 sticky top-0 z-10 text-slate-600 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+          <thead className="bg-slate-950/80 sticky top-0 z-10 text-slate-400 font-semibold border-b border-slate-800">
             <tr>
               <th className="py-2.5 px-3 w-12">#</th>
               <th className="py-2.5 px-3">Timestamp</th>
@@ -120,11 +120,11 @@ export const PointsTable: React.FC<PointsTableProps> = ({ points, totalCount }) 
               <th className="py-2.5 px-3">Node ID</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-800 dark:text-slate-200 font-mono">
+          <tbody className="divide-y divide-slate-800/80 text-slate-200 font-mono">
             {filteredPoints.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-8 text-center text-slate-500 font-sans">
-                  No coordinate records match.
+                <td colSpan={8} className="py-10 text-center text-slate-500 font-sans">
+                  No coordinate records match the current filter.
                 </td>
               </tr>
             ) : (
@@ -134,38 +134,38 @@ export const PointsTable: React.FC<PointsTableProps> = ({ points, totalCount }) 
                 return (
                   <tr
                     key={pt.id}
-                    className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${
+                    className={`hover:bg-slate-800/50 transition-colors ${
                       isCurrent
-                        ? 'bg-rose-50/40 dark:bg-rose-950/20'
+                        ? 'bg-rose-950/20 text-rose-200'
                         : isStart
-                        ? 'bg-emerald-50/40 dark:bg-emerald-950/20'
+                        ? 'bg-emerald-950/20 text-emerald-200'
                         : ''
                     }`}
                   >
-                    <td className="py-2 px-3 text-slate-400 tabular-nums">
+                    <td className="py-2 px-3 text-slate-500 tabular-nums">
                       {isCurrent ? (
-                        <span className="text-red-600 font-bold">●</span>
+                        <span className="text-rose-400 font-bold">●</span>
                       ) : isStart ? (
-                        <span className="text-emerald-600 font-bold">▶</span>
+                        <span className="text-emerald-400 font-bold">▶</span>
                       ) : (
                         points.length - idx
                       )}
                     </td>
-                    <td className="py-2 px-3 tabular-nums text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                    <td className="py-2 px-3 tabular-nums text-slate-400 whitespace-nowrap">
                       {new Date(pt.timestamp).toLocaleTimeString()}
                     </td>
-                    <td className="py-2 px-3 tabular-nums font-semibold">{pt.latitude.toFixed(6)}°</td>
-                    <td className="py-2 px-3 tabular-nums font-semibold">{pt.longitude.toFixed(6)}°</td>
-                    <td className="py-2 px-3 tabular-nums">
+                    <td className="py-2 px-3 tabular-nums font-semibold text-slate-100">{pt.latitude.toFixed(6)}°</td>
+                    <td className="py-2 px-3 tabular-nums font-semibold text-slate-100">{pt.longitude.toFixed(6)}°</td>
+                    <td className="py-2 px-3 tabular-nums text-slate-300">
                       {pt.altitude != null ? `${pt.altitude} m` : '—'}
                     </td>
-                    <td className="py-2 px-3 tabular-nums">
+                    <td className="py-2 px-3 tabular-nums text-slate-300">
                       {pt.speed_kmh != null ? `${pt.speed_kmh} km/h` : '—'}
                     </td>
-                    <td className="py-2 px-3 font-sans text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                    <td className="py-2 px-3 font-sans text-slate-400 whitespace-nowrap">
                       {pt.source}
                     </td>
-                    <td className="py-2 px-3 text-slate-500 tabular-nums">
+                    <td className="py-2 px-3 text-cyan-400 tabular-nums">
                       {pt.node_id || '—'}
                     </td>
                   </tr>

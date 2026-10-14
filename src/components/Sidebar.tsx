@@ -81,27 +81,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const baudRates = [9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600];
 
   const simulationPresets = [
-    { name: 'San Francisco Urban Walk', coords: '37.7749°N, 122.4194°W' },
-    { name: 'Rocky Mountain Alpine Ridge', coords: '39.7392°N, 104.9903°W' },
-    { name: 'Munich City Mesh Node', coords: '48.1371°N, 11.5754°E' },
+    { name: 'San Francisco Urban Walk', coords: '37.7749°N, 122.4194°W', terrain: 'Urban canyon & hills · 42m MSL' },
+    { name: 'Rocky Mountain Alpine Ridge', coords: '39.7392°N, 104.9903°W', terrain: 'High altitude repeaters · 1609m MSL' },
+    { name: 'Munich City Mesh Node', coords: '48.1371°N, 11.5754°E', terrain: 'European urban relay · 519m MSL' },
   ];
 
   const statusBadge = (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
         isConnected
-          ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+          ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/80 shadow-sm shadow-emerald-900/30'
           : isSimulated
-          ? 'bg-amber-950 text-amber-300 border border-amber-800'
-          : 'bg-slate-800 text-slate-400'
+          ? 'bg-purple-950/80 text-purple-300 border border-purple-800/80 shadow-sm shadow-purple-900/30'
+          : 'bg-slate-800/80 text-slate-400 border border-slate-700/60'
       }`}
     >
       <span
         className={`w-1.5 h-1.5 rounded-full ${
-          isConnected ? 'bg-emerald-400 animate-pulse' : isSimulated ? 'bg-amber-400 animate-pulse' : 'bg-slate-500'
+          isConnected ? 'bg-emerald-400 animate-pulse' : isSimulated ? 'bg-purple-400 animate-pulse' : 'bg-slate-500'
         }`}
       />
-      {status === 'connected' ? 'Hardware Active' : status === 'simulated' ? 'Demo Sim' : 'Offline'}
+      {status === 'connected' ? 'Hardware Active' : status === 'simulated' ? 'Demo Streaming' : 'Offline'}
     </span>
   );
 
@@ -249,6 +249,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </option>
             ))}
           </select>
+          <div className="mt-1.5 p-1.5 rounded bg-slate-950/80 border border-slate-800 text-[10px] font-mono text-slate-400 space-y-0.5">
+            <div className="flex justify-between">
+              <span>Origin:</span>
+              <span className="text-slate-300">{simulationPresets[selectedRouteIndex]?.coords}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Environment:</span>
+              <span className="text-purple-300 truncate max-w-[170px]">{simulationPresets[selectedRouteIndex]?.terrain}</span>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
