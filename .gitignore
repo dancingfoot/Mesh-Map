@@ -17,3 +17,4 @@ bridge/mqtt-config.json
 .git-token
 *.token
 .aistudio/
+bun.lock

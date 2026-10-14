@@ -50,7 +50,6 @@ import {
   Compass,
   Cpu,
   X,
-  Zap,
 } from 'lucide-react';
 
 const TelemetryPanel = lazy(() =>
@@ -1285,41 +1284,6 @@ export default function App() {
 
             {/* Right Zone: Primary Actions */}
             <div className="flex items-center gap-2 shrink-0">
-              {/* Quick Demo toggle */}
-              {connectionStatus === 'simulated' ? (
-                <button
-                  type="button"
-                  onClick={handleStopSimulation}
-                  className="flex items-center gap-1 px-2.5 py-1 text-xs font-mono font-bold bg-purple-950 text-purple-200 border border-purple-800 hover:bg-purple-900 rounded-lg transition-colors"
-                  title="Stop simulated telemetry stream"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-                  <span>Stop Demo</span>
-                </button>
-              ) : connectionStatus === 'disconnected' ? (
-                <button
-                  type="button"
-                  onClick={handleStartSimulation}
-                  className="flex items-center gap-1 px-2.5 py-1 text-xs font-mono font-bold bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors shadow-sm shadow-purple-900/40"
-                  title="Start realistic simulated LoRa route and packets"
-                >
-                  <Radio className="w-3 h-3" />
-                  <span>Start Demo</span>
-                </button>
-              ) : null}
-
-              {/* Web Serial Quick Connect button */}
-              {connectionStatus === 'disconnected' && (
-                <button
-                  type="button"
-                  onClick={handleConnectSerial}
-                  className="hidden sm:flex items-center gap-1 px-2.5 py-1 text-xs font-mono font-bold bg-cyan-700 hover:bg-cyan-600 text-white rounded-lg transition-colors"
-                >
-                  <Zap className="w-3 h-3" />
-                  <span>Connect Serial</span>
-                </button>
-              )}
-
               {/* Clear Trace Button */}
               <button
                 type="button"
